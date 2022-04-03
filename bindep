@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+usage="Usage: bindep FILE"
+
+[[ -z $@ ]] || [ ${#@} -gt 1 ] && echo "bindep: needs 1 argument, ${#@} given
+$usage" && exit 1
+
+direct_deps=""
+indirect_deps=""
+
+for lib in $(
+   ldd "$1" \
+   | grep -av vdso \
+   | cut -d' ' -f3 \
+   | xargs -n1 basename
+   )
+do
+   candidate_pkgs=$(
+      pacman -F --machinereadable "$lib" \
+      | xargs -0 echo \
+      | cut -d' ' -f2 \
+      | grep . \
+      | sort
+   )
+   candidate_count=$(echo "$candidate_pkgs" | wc -l)
+   found_pkgs=$(comm -12 <(echo "$candidate_pkgs") <(echo "$indirect_deps"))
+
+   if [[ ! -z $found_pkgs ]]; then
+      pkg=$(echo "$found_pkgs" | head -n1)
+   elif [ $candidate_count -lt 1 ]; then
+      continue
+   elif [ $candidate_count -eq 1 ]; then
+      pkg="$candidate_pkgs"
+   elif [ $candidate_count -gt 1 ]; then
+      >&2 echo "Choose package to provide $lib":
+      select pkg in $(echo "$candidate_pkgs"); do
+         [ ! -z "$pkg" ] && break
+      done
+   fi
+
+   if [[ -z $direct_deps ]]; then
+      direct_deps=$(echo "$pkg" | sort)
+   else
+      direct_deps=$(echo -e "$direct_deps\n$pkg" | sort | uniq)
+   fi
+
+   >&2 echo "$lib => $pkg"
+
+   # Skip first line, which is $pkg itself.
+   pkg_deps=$(pactree -ls "$pkg" | tail -n +2)
+   if [[ -z $indirect_deps ]]; then
+      indirect_deps=$(echo "$pkg_deps" | sort)
+   else
+      indirect_deps=$(echo -e "$indirect_deps\n$pkg_deps" | sort | uniq)
+   fi
+done
+
+comm -23 <(echo "$direct_deps") <(echo "$indirect_deps")
