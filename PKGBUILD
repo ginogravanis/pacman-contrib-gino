@@ -7,7 +7,8 @@ pkgrel=1
 pkgdesc='Utilities for pacman'
 arch=('i686' 'x86_64')
 license=('MIT')
-depends=(grep pacman pacman-contrib)
+depends=(pacman-contrib)
+makedepends=(git)
 
 pkgver() {
    git -C "$BUILDDIR" describe --long --tags | sed 's/-/./g'
