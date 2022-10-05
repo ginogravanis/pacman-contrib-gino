@@ -29,7 +29,7 @@ do
       pacman -F --machinereadable "$lib" \
       | xargs -0 echo \
       | cut -d' ' -f2 \
-      | grep . \
+      | xargs -L1 \
       | sort
    )
    candidate_count=$(echo "$candidate_pkgs" | wc -l)
