@@ -51,7 +51,7 @@ do
    if [[ -z $direct_deps ]]; then
       direct_deps=$(echo "$pkg" | sort)
    else
-      direct_deps=$(echo -e "$direct_deps\n$pkg" | sort | uniq)
+      direct_deps=$(echo -e "$direct_deps\n$pkg" | sort -u)
    fi
 
    >&2 echo "$lib => $pkg"
@@ -61,7 +61,7 @@ do
    if [[ -z $indirect_deps ]]; then
       indirect_deps=$(echo "$pkg_deps" | sort)
    else
-      indirect_deps=$(echo -e "$indirect_deps\n$pkg_deps" | sort | uniq)
+      indirect_deps=$(echo -e "$indirect_deps\n$pkg_deps" | sort -u)
    fi
 done
 
