@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 
-usage="Usage: bindep FILE"
+err() {
+   local red reset
+   red="$(tput setaf 1)"
+   reset="$(tput sgr0)"
+   echo -e "${red}[Error]${reset} $1" >&2
+}
 
-[ ${#@} -ne 1 ] && echo "bindep: needs 1 argument, ${#@} given
-$usage" && exit 1
+usage() {
+   err "1 argument required, ${#@} given: $*"
+   echo "Usage: $(basename "$0") FILE"
+   exit 1
+}
+
+[ ${#@} -ne 1 ] && usage "$@"
 
 direct_deps=""
 indirect_deps=""
